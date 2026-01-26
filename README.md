@@ -55,6 +55,98 @@ Presenter - презентер содержит основную логику п
 
 ### Базовый код
 
+#### IProduct
+
+interface IProduct {
+    id: string;
+    description: string;
+    image: string;
+    title: string;
+    category: string;
+    price: number | null;
+}
+Назначение: содержит информацию о товаре.
+
+interface IBuyer {
+    payment: 'card' | 'cash';
+    email: string;
+    phone: string;
+    address: string;
+}
+Назначение: содержит данные пользователя во время оформления заказа.
+
+interface IGetProductsResponse {
+    total: number;
+    items: IProduct[];
+}
+Назначение: ответ сервера, когда запрашиваем товары.
+
+### Модели данных
+
+#### Products 
+Представляет собой каталог, который хранит все товары магазина.
+
+Методы: 
+`getItems()` - вернет все товары.
+`getProductById(id)` - поиск товара по его id.
+`setItems(массив)` - отвечает за сохранение товаров.
+`setSelectedProduct()` - подробный просмотр товара.
+`getSelectedProduct()` - возвращает выбранный товар.
+
+#### Basket
+Корзина, которая хранит в себе выбранные пользователем товары.
+
+Методы:
+`add()` - добавление товара.
+`remove()` - удаление товара.
+`getItems()` - возвращает все товары в корзине.
+`clear()` - очистка корзины.
+`getTotalCount()` - получение количества товаров.
+`getTotal()` - получение общей стоимости товаров.
+`hasItem()` - проверка на наличие товара в корзине.
+
+#### Order
+Хранит в себе информацию о деталях заказа в том числе об адресе и способе оплаты.
+
+Методы:
+`setPayment()` - сохранение способа оплаты.
+`setPhone()` - сохранение номера телефона.
+`setEmail()` - сохранение почтового адреса.
+`setAddress()` - сохранение адреса.
+`getData()` - возвращает все данные.
+`clear()` - очистка формы.
+`validate()` - проверка на заполнение полей.
+
+### Слой коммуникации
+
+#### ApiS
+Отвечает за получение товаров с сервера и отправление заказов.
+
+Методы:
+`getProducts()` - запрашивает товары.
+`postOrder()` - отправляет заказы.
+
+### Код в основном скрипте main.ts
+
+#### Создаение объектов:
+const productsModel = new Products();
+const cart = new Cart();
+const order = new Order();
+
+#### Подключение API
+const api = new Api(import.meta.env.VITE_API_ORIGIN);
+const appApi = new AppApi(api);
+
+#### Загрузка товаров с сервера
+appApi.getProducts()
+    .then(items => {
+        productsModel.setItems(items);
+        console.log('Товары:', productsModel.getItems());
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+    });
+
 #### Класс Component
 Является базовым классом для всех компонентов интерфейса.
 Класс является дженериком и принимает в переменной `T` тип данных, которые могут быть переданы в метод `render` для отображения.
