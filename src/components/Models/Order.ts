@@ -22,18 +22,14 @@ export class Order {
         this.address = value;
     }
 
-    getData(): Partial<IBuyer> {
-    const result: Partial<IBuyer> = {};
-
-    if (this.payment !== null) {
-        result.payment = this.payment;
+    getData(): IBuyer { // Полагаю, что не могу заменить интерфейс на другой, который решит вопрос наличия null
+        return {
+            payment: this.payment, // По умолчанию не может быть null, хотя должен (как я понял)
+            email: this.email,
+            phone: this.phone,
+            address: this.address,
+        } as IBuyer; // После validate() все поля будут заполнены
     }
-    if (this.email) result.email = this.email;
-    if (this.phone) result.phone = this.phone;
-    if (this.address) result.address = this.address;
-
-    return result;
-}
 
     clear(): void {
         this.payment = null;
@@ -42,14 +38,14 @@ export class Order {
         this.address = '';
     }
 
-    validate(): { [key: string]: string } | null {
-        const errors: { [key: string]: string } = {};
+    validate(): Partial<Record<keyof IBuyer, string>> {
+        const errors: Partial<Record<keyof IBuyer, string>> = {};
 
         if (!this.payment) errors.payment = 'Не выбран способ оплаты';
         if (!this.email) errors.email = 'Укажите email';
         if (!this.phone) errors.phone = 'Укажите телефон';
         if (!this.address) errors.address = 'Укажите адрес доставки';
 
-        return Object.keys(errors).length > 0 ? errors : null;
+        return errors;
     }
 }

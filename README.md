@@ -81,6 +81,20 @@ interface IGetProductsResponse {
 }
 Назначение: ответ сервера, когда запрашиваем товары.
 
+interface IOrder extends IBuyer {
+  total: number;
+  items: string[];
+}
+
+Назначение: формирование данных заказа, которые отправляются на сервер.
+
+interface IOrderResponse {
+  id: string;
+  total: number;
+}
+
+Назначение: содержит ответ сервера в случае успешного создания заказа (Идентификатор заказа + его итоговая стоимость).
+
 ### Модели данных
 
 #### Products 
