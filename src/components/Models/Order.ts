@@ -1,7 +1,7 @@
 import { IBuyer, TPayment } from '../../types';
 
 export class Order {
-    private payment: TPayment | null = null;
+    private payment: TPayment = null;
     private email: string = '';
     private phone: string = '';
     private address: string = '';
@@ -22,13 +22,13 @@ export class Order {
         this.address = value;
     }
 
-    getData(): IBuyer { // Полагаю, что не могу заменить интерфейс на другой, который решит вопрос наличия null
+    getData(): IBuyer {
         return {
-            payment: this.payment, // По умолчанию не может быть null, хотя должен (как я понял)
+            payment: this.payment,
             email: this.email,
             phone: this.phone,
             address: this.address,
-        } as IBuyer; // После validate() все поля будут заполнены
+        };
     }
 
     clear(): void {
