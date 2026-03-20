@@ -6,21 +6,16 @@ import { Api } from './components/base/Api';
 import { AppApi } from './components/base/ApiS';
 import { apiProducts } from './utils/data';
 import { API_URL } from './utils/constants';
+import { AppPresenter } from './presenter/AppPresenter';
+import { EventEmitter } from './components/base/Events';
 
 const productsModel = new Products();
-const cart = new Cart();
+const events = new EventEmitter(); 
+const cart = new Cart(events);
 const order = new Order();
 const api = new Api(API_URL);
 const appApi = new AppApi(api);
-
-appApi.getProducts()
-    .then(items => {
-        productsModel.setItems(items);
-        console.log('Товары:', productsModel.getItems());
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
-    });
+new AppPresenter(productsModel, cart, order, events, appApi);
 
 // Тестирование
 // Products
