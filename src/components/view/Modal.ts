@@ -35,10 +35,6 @@ export class Modal extends Component<IModal> {
         this.container.classList.remove('modal_active');
     }
 
-    isOpen(): boolean {
-        return this.container.classList.contains('modal_active');
-    }
-
     getCurrentContent(): HTMLElement | null {
         return this.contentContainer.firstElementChild as HTMLElement || null;
     }

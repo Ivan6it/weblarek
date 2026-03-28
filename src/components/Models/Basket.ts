@@ -22,7 +22,7 @@ export class Cart {
 
     clear(): void {
         this.items = [];
-        this.events.emit('basket:clear');
+        this.events.emit('basket:change');
     }
 
     getTotal(): number {

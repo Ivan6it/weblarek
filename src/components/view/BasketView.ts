@@ -30,16 +30,7 @@ export class BasketView extends Component<IBasketData> {
     }
 
     set items(items: HTMLElement[]) {
-        if (items.length === 0) {
-            this.listContainer.innerHTML = '';
-            this.button.disabled = true;
-        } else {
-            this.listContainer.replaceChildren(...items);
-            this.button.disabled = false;
-        }
-    }
-
-    get element(): HTMLElement {
-        return this.container;
+        this.listContainer.replaceChildren(...items);
+        this.button.disabled = items.length === 0;
     }
 }

@@ -1,6 +1,7 @@
 import { IEvents } from "../base/Events";
 import { ensureElement } from "../../utils/utils";
 import { View } from "./View";
+import { categoryMap } from '../../utils/constants';
 
 export class CartCatalog extends View  {
     imageElement: HTMLImageElement;
@@ -24,17 +25,8 @@ export class CartCatalog extends View  {
     }
 
     set category(value: string) {
-        const categoryStyles: Record<string, string> = {
-            'софт-скил': 'card__category_soft',
-            'хард-скил': 'card__category_hard',
-            'другое': 'card__category_other',
-            'дополнительное': 'card__category_additional',
-            'цифровые товары': 'card__category_figure',
-            'кнопка': 'card__category_button',
-        };
-
         this.categoryElement.className = 'card__category';
-        const style = categoryStyles[value];
+        const style = categoryMap[value as keyof typeof categoryMap];
         this.categoryElement.classList.add(style);
         this.categoryElement.textContent = value;
     }

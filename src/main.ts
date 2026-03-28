@@ -47,10 +47,8 @@ const cardPreviewElement = cloneTemplate<HTMLDivElement>('#card-preview');
 const cardPreview = new CardPreview(cardPreviewElement, events);
 
 // --- Корзина и товары, которые там лежат ---
-let basketView: BasketView;
-let basketItemTemplate: HTMLTemplateElement;
-basketItemTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
-basketView = new BasketView(cloneTemplate<HTMLDivElement>('#basket'),events);
+const basketItemTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
+const basketView = new BasketView(cloneTemplate<HTMLDivElement>('#basket'), events);
 
 // --- Форма заказа ---
 const orderViewContainer = cloneTemplate<HTMLFormElement>('#order');
@@ -136,18 +134,15 @@ events.on('modal:close(Overlay)', () => {
 
 events.on('basket:change', () => {
     headerBasket.counter = cart.getTotalCount();
+    const products = cart.getItems();
+    const basketItems = products.map((product, index) => {
+        const itemElement = cloneTemplate(basketItemTemplate);
+        const item = new BasketItem(itemElement, events);
+        return item.renderAsBasketItem(product, index + 1);
+    });
 
-    if (modal.isOpen() && modal.getCurrentContent() === basketView.element) {
-        const products = cart.getItems();
-        const basketItems = products.map((product, index) => {
-            const itemElement = cloneTemplate(basketItemTemplate);
-            const item = new BasketItem(itemElement, events);
-            return item.renderAsBasketItem(product, index + 1);
-        });
-
-        basketView.items = basketItems;
-        basketView.total = cart.getTotal();
-    }
+    basketView.items = basketItems;
+    basketView.total = cart.getTotal();
 });
 
 events.on('card:deleteBasketItem', (data: { id: string }) => {
@@ -155,17 +150,6 @@ events.on('card:deleteBasketItem', (data: { id: string }) => {
 });
 
 events.on('basket:open', () => {
-    const products = cart.getItems();
-    const basketItems = products.map((product, index) => {
-
-        const itemElement = cloneTemplate(basketItemTemplate);
-        const item = new BasketItem(itemElement, events);
-
-        return item.renderAsBasketItem(product, index + 1);
-    })
-    basketView.items = basketItems;
-    basketView.total = cart.getTotal();
-
     modal.render({
         content: basketView.render()
     });
@@ -256,12 +240,6 @@ events.on('set:contacts', () => {
 });
 
 events.on('success:submit', () => {
-    const errors = order.validate(); // Финальная доп проверка, если каким-то образом удалось пройти валидацию с ошибками
-    if (Object.keys(errors).length > 0) {
-        console.error('Ошибки валидации:', errors);
-        return;
-    }
-
     appApi.postOrder({
         ...order.getData(),
         total: cart.getTotal(),
@@ -281,8 +259,4 @@ events.on('success:submit', () => {
     .catch(error => {
         console.error('Ошибка при отправке заказа:', error);
     });
-});
-
-events.on('basket:clear', () => {
-    headerBasket.counter = cart.getTotalCount();
 });
