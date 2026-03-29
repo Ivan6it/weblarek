@@ -3,25 +3,25 @@ import { ensureElement } from '../../utils/utils';
 
 interface IFormState {
     valid: boolean;
-    errors: string[];
+    errors: string;
 }
 
-export abstract class FormView<T> extends Component<IFormState> { // <T> используют дочерние классы
+export abstract class FormView<T> extends Component<IFormState & T> {
     protected submitButton: HTMLButtonElement;
-    protected error: HTMLElement;
+    protected errorElement: HTMLElement;
 
     constructor(container: HTMLElement) {
         super(container);
 
         this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', container);
-        this.error = ensureElement<HTMLElement>('.form__errors', container);
+        this.errorElement = ensureElement<HTMLElement>('.form__errors', container);
     }
 
-    submitValidation(value: boolean): void {
+    set errors(value: string) {
+        this.errorElement.textContent = value;
+    }
+
+    set valid(value: boolean) {
         this.submitButton.disabled = !value;
-    }
-
-    setError(value: string): void {
-        this.error.innerHTML = value;
     }
 }

@@ -11,9 +11,7 @@ export class Order {
 
     setPayment(value: TPayment): void {
         this.payment = value;
-        this.events.emit('set:payment', {
-            payment: this.payment,
-        });
+        this.events.emit('set:payment');
     }
 
     setEmail(value: string): void {

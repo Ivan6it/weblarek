@@ -1,32 +1,27 @@
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
 import { ensureElement } from '../../utils/utils';
-import { renderPrice } from '../../utils/upPrice';
 
 interface ISuccessView {
-    total: number;
+    total: string;
 }
 
 export class SuccessView extends Component<ISuccessView> {
-    protected total: HTMLElement;
+    protected totalElement: HTMLElement;
     protected buttonSuccess: HTMLButtonElement;
 
     constructor(container: HTMLElement, events: IEvents) {
         super(container);
 
-        this.total = ensureElement<HTMLElement>('.order-success__description', container);
+        this.totalElement = ensureElement<HTMLElement>('.order-success__description', container);
         this.buttonSuccess = ensureElement<HTMLButtonElement>('.order-success__close', container);
 
         this.buttonSuccess.addEventListener('click', () => {
-            events.emit('modal:close');
+            events.emit('success:clickNewPurchases');
         });
     }
 
-    get element(): HTMLElement {
-        return this.container;
-    }
-
-    setTotal(total: number) {
-        this.total.textContent = `Списано ${renderPrice(total)} синапсов`;
+    set total(total: string) {
+        this.totalElement.textContent = total; 
     }
 }

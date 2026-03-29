@@ -17,12 +17,12 @@ export class Modal extends Component<IModal> {
         this.closeButton = ensureElement<HTMLButtonElement>('.modal__close', container);
 
         this.closeButton.addEventListener('click', () => {
-            this.events.emit('modal:close');
+            this.close();
         });
 
         this.container.addEventListener('click', (event) => {
             if (event.target === this.container) {
-                this.events.emit('modal:close(Overlay)');
+                this.close();
             }
         });
     }
@@ -35,14 +35,7 @@ export class Modal extends Component<IModal> {
         this.container.classList.remove('modal_active');
     }
 
-    getCurrentContent(): HTMLElement | null {
-        return this.contentContainer.firstElementChild as HTMLElement || null;
+    set content(content: HTMLElement) {
+        this.contentContainer.replaceChildren(content);
     }
-
-    render(data: IModal): HTMLElement {
-        super.render(data);
-        this.contentContainer.replaceChildren(data.content);
-        return this.container;
-    }
-
 }

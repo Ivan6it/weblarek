@@ -37,3 +37,7 @@ export interface IOrderResponse {
   id: string;
   total: number;
 }
+
+export interface IBasketActions {
+  OnClick: () => void;
+}

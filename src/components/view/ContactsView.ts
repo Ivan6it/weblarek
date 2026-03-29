@@ -29,18 +29,17 @@ export class ContactsView extends FormView<IContactsData> {
             });
         });
 
-        this.submitButton.addEventListener('click', (event) => {
+        this.container.addEventListener('submit', (event) => {
             event.preventDefault();
             events.emit('success:submit');
         });
     }
 
-    get element(): HTMLElement {
-        return this.container;
+    set email(value: string) {
+        this.emailInput.value = value;
     }
 
-    clear(): void {
-        this.emailInput.value = '';
-        this.phoneInput.value = '';
+    set phone(value: string) {
+        this.phoneInput.value = value;
     }
 }

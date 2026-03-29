@@ -1,18 +1,18 @@
 import { IEvents } from '../base/Events';
 import { ensureElement } from '../../utils/utils';
-import { IProduct } from '../../types';
-import { getApiImageUrl } from '../../utils/graphics';
-import { View } from './View';
+import { cardView } from './CardView';
 import { categoryMap } from '../../utils/constants';
 
 interface ICardPreviewData {
-    product: IProduct;
+    image: string;
     buttonText: string;
+    descriptionText: string;
+    category: string;
     buttonEnabled: boolean;
 }
 
-export class CardPreview extends View {
-    protected description: HTMLElement;
+export class CardPreview extends cardView<ICardPreviewData> {
+    protected descriptionElement: HTMLElement;
     protected button: HTMLButtonElement;
     protected imageElement: HTMLImageElement;
     protected categoryElement: HTMLElement;
@@ -22,48 +22,24 @@ export class CardPreview extends View {
 
         this.imageElement = ensureElement<HTMLImageElement>('.card__image', container);
         this.categoryElement = ensureElement<HTMLElement>('.card__category', container);
-        this.description = ensureElement<HTMLElement>('.card__text', container);
+        this.descriptionElement = ensureElement<HTMLElement>('.card__text', container);
         this.button = ensureElement<HTMLButtonElement>('.card__button', container);
 
         this.button.addEventListener('click', () => {
-            events.emit('card:add/deleteBasket', {
-                id: this.container.dataset.id,
-            });
+            events.emit('preview:clicked');
         });
     }
 
-    setProductId(id: string): void {
-        this.container.dataset.id = id;
-    }
-
-    set descriptionText(text: string) {
-        this.description.textContent = text;
+    set description(text: string) {
+        this.descriptionElement.textContent = text;
     }
 
     set image(src: string) {
         this.setImage(this.imageElement, src);
     }
 
-    set inCart(value: boolean) {
-        this.button.textContent = value ? 'Удалить из корзины' : 'Купить';
-    }
-
-    setData(data: ICardPreviewData): void {
-        const { product, buttonText, buttonEnabled } = data;
-
-        this.container.dataset.id = product.id;
-        this.title = product.title;
-        this.image = getApiImageUrl(product.image);
-        this.category = product.category;
-        this.price = product.price;
-        this.descriptionText = product.description;
-        this.button.textContent = buttonText;
-        this.button.disabled = !buttonEnabled;
-    }
-
-    render(): HTMLElement {
-        super.render({});
-        return this.container;
+    set buttonText(value: string) {
+        this.button.textContent = value;
     }
 
     set category(value: string) {
@@ -71,5 +47,9 @@ export class CardPreview extends View {
         const style = categoryMap[value as keyof typeof categoryMap];
         this.categoryElement.classList.add(style);
         this.categoryElement.textContent = value;
+    }
+
+    set buttonEnabled(value: boolean) {
+        this.button.disabled = !value;
     }
 }

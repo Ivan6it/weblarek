@@ -1,22 +1,25 @@
-import { IEvents } from "../base/Events";
 import { ensureElement } from "../../utils/utils";
-import { View } from "./View";
+import { cardView } from "./CardView";
 import { categoryMap } from '../../utils/constants';
+import { IBasketActions } from "../../types";
 
-export class CartCatalog extends View  {
+interface ICartCatalogData {
+    image: string;
+    category: string;
+}
+
+export class CartCatalog extends cardView<ICartCatalogData>  {
     imageElement: HTMLImageElement;
     categoryElement: HTMLElement;
 
-    constructor(container: HTMLElement, events: IEvents) {
+    constructor(container: HTMLElement, actions: IBasketActions) {
         super(container);
 
         this.imageElement = ensureElement<HTMLImageElement>('.card__image', container);
         this.categoryElement = ensureElement<HTMLElement>('.card__category', container);
 
         this.container.addEventListener('click', () => {
-            events.emit('card:select', {
-                id: this.container.dataset.id,
-            })
+            actions.OnClick();
         });
     }
 

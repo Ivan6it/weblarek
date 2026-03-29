@@ -101,7 +101,7 @@ interface IOrderResponse {
 Представляет собой каталог, который хранит все товары магазина.
 
 Конструктор:
-Используется конструктор по умолчанию.
+`constructor(protected events: IEvents) {}` - принимает events.
 
 Поля класса:
 `selectedProduct` - хранит текущий выбранный товар.
@@ -121,7 +121,6 @@ interface IOrderResponse {
 `constructor(protected events: IEvents) {}` - принимает events.
 
 Поля класса:
-`events: IEvents` - используется для оповещения системы об изменениях в корзине.
 `items` - хранит массив товаров, которые находятся в корзине.
 
 Методы:
@@ -140,7 +139,6 @@ interface IOrderResponse {
 `constructor(protected events: IEvents) {}` - принимает events.
 
 Поля класса:
-`events: IEvents` - используется для оповещения системы об изменениях в данных пользователя.
 `payment` - способ оплаты (card или cash).
 `email` - email покупателя.
 `phone` - номер телефона покупателя.
@@ -194,10 +192,12 @@ const cardPreviewElement = cloneTemplate<HTMLDivElement>('#card-preview');
 const cardPreview = new CardPreview(cardPreviewElement, events);
 
 #### Корзина и товары, которые там лежат
-let basketView: BasketView;
-let basketItemTemplate: HTMLTemplateElement;
-basketItemTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
-basketView = new BasketView(cloneTemplate<HTMLDivElement>('#basket'),events);
+const basketItemTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
+const basketView = new BasketView(cloneTemplate<HTMLDivElement>('#basket'), {
+    OnClick: () => {
+        events.emit('order:submit')
+    }
+});
 
 #### Форма заказа
 const orderViewContainer = cloneTemplate<HTMLFormElement>('#order');
@@ -211,28 +211,49 @@ const contactsView = new ContactsView(contactsViewContainer, events);
 const successViewContainer = cloneTemplate<HTMLFormElement>('#success');
 const successView = new SuccessView(successViewContainer, events);
 
-#### Загрузка товаров с сервера и создание карточек
-appApi.getProducts()
+#### Загрузка товаров с сервера
+function init() {
+    appApi.getProducts()
     .then(items => {
-        productsModel.setItems(items);
-
-        const cardElements = items.map(item => {
-            const cardElement = cloneTemplate<HTMLButtonElement>('#card-catalog');
-            cardElement.dataset.id = item.id;
-            const card = new CartCatalog(cardElement, events);
-
-            card.title = item.title;
-            card.image = getApiImageUrl(item.image);
-            card.price = item.price;
-            card.category = item.category;
-
-        return card.render() as HTMLElement;
-        });
-        gallery.catalog = cardElements;
+        productsModel.setItems(
+            items.map(item => ({
+                ...item,
+                image: getApiImageUrl(item.image),
+            }))
+        );
     })
     .catch(error => {
         console.error('Ошибка:', error);
     });
+    order.clear();
+    cart.clear();
+}
+
+init();
+
+#### Отправка заказа на сервер
+events.on('success:submit', () => {
+    appApi.postOrder({
+        ...order.getData(),
+        total: cart.getTotal(),
+        items: cart.getItems().map(item => item.id)
+    })
+
+    .then(result => {
+        order.clear();
+        cart.clear();
+        modal.render({
+            content: successView.render({
+                total: `Списано ${renderPrice(result.total)} синапсов`,
+            }),
+        });
+        modal.open();
+    })
+
+    .catch(error => {
+        console.error('Ошибка при отправке заказа:', error);
+    });
+});
 
 #### Презентор
 Реализует всю логику приложения, устанавливая связь между моделями и слоем представления.
@@ -285,7 +306,7 @@ appApi.getProducts()
 #### Класс BasketView
 Отображает интерфейс корзины: список товаров, общую сумму и кнопку оформления заказа.
 
-Конструктор класса принимает: `container` - HTML-элемент, в котором будет отрисовываться содержимое корзины и `events` - экземпляр IEvents для генерации события при нажатии на кнопку "Оформить".
+Конструктор класса принимает: `container` - HTML-элемент, в котором будет отрисовываться содержимое корзины и `actions` - объект действий.
 
 Поля класса:
 `listContainer` - контейнер для списка товаров в корзине.
@@ -295,12 +316,11 @@ appApi.getProducts()
 Методы класса:
 `set total` - устанавливает итоговую сумму.
 `set items` - заполняет список товаров.
-`get element` - возвращает корневой элемент корзины (для передачи в модальное окно).
 
 #### Класс BasketItem
 Представляет собой визуальный элемент товара внутри корзины. Отображает номер, название, цену и кнопку удаления.
 
-Конструктор класса принимает: `container` - HTML-элемент с шаблоном товара как элемента корзины и `events` -  экземпляр IEvents для генерации события при удалении товара.
+Конструктор класса принимает: `container` - HTML-элемент с шаблоном товара как элемента корзины и `actions` - объект действий.
 
 Поля класса:
 `indexElement` - элемент, отображающий порядковый номер товара.
@@ -308,7 +328,6 @@ appApi.getProducts()
 
 Методы класса:
 `set index` - устанавливает порядковый номер товара в корзине.
-`renderAsBasketItem` - заполняет карточку данными товара.
 
 #### Класс CardPreview
 Представляет собой карточку товара, которая открывается при клике на элемент в галерее.
@@ -316,24 +335,22 @@ appApi.getProducts()
 Конструктор класса принимает: `container` - HTML-элемент с шаблоном карточки товара и `events` - экземпляр IEvents для генерации события при взаимодействии с кнопкой.
 
 Поля класса:
-`description` - элемент для отображения описания товара.
+`descriptionElement` - элемент для отображения описания товара.
 `button` - кнопка действия ("Купить" / "Удалить из корзины").
 `imageElement` - изображение товара.
 `categoryElement` - элемент для отображения категории.
 
 Методы класса:
-`set descriptionText` - устанавливает текст описания товара.
+`set description` - устанавливает текст описания товара.
 `set image` - устанавливает изображение товара.
-`set inCart` - изменяет текст кнопки.
+`set buttonText` - изменяет текст кнопки.
 `set category` - устанавливает категорию.
-`setData` - заполняет карточку данными товара.
-`render` - вызывает родительский render.
-`setProductId` - устанавливает id товара для последующей передачи.
+`set buttonEnabled` - включает или отключает кнопку действия.
 
 #### Класс CartCatalog
 Представляет собой карточку товара в галерее.
 
-Конструктор класса принимает: `container` - HTML-элемент с шаблоном карточки товара и `events` - экземпляр IEvents для генерации события при клике.
+Конструктор класса принимает: `container` - HTML-элемент с шаблоном карточки товара и `actions` - объект действий.
 
 Поля класса:
 `imageElement` - изображения товара.
@@ -353,8 +370,8 @@ appApi.getProducts()
 `phoneInput` - поле ввода телефона.
 
 Методы класса:
-`get element` - возвращает корневой элемент формы (для передачи в модальное окно).
-`clear()` - очищает поля ввода.
+`set email` - устанавливает значение поля email.
+`set phone` - устанавливает значение поля номера телефона.
 
 #### Класс FormView
 Абстрактный базовый класс для всех форм в приложении.
@@ -363,11 +380,11 @@ appApi.getProducts()
 
 Поля класса:
 `submitButton` - кнопка отправки формы.
-`error` - элемент для отображения текста ошибки.
+`errorElement` - элемент для отображения текста ошибки.
 
 Методы класса:
-`submitValidation` - включает или отключает кнопку отправки в зависимости от валидности формы.
-`setError` - устанавливает текст ошибки.
+`set valid` - включает или отключает кнопку отправки в зависимости от валидности формы.
+`set errors` - устанавливает текст ошибки.
 
 #### Класс Gallery
 Представляет собой контейнер для отображения списка карточек товаров.
@@ -404,9 +421,7 @@ appApi.getProducts()
 Методы класса:
 `open` - открывает модальное окно.
 `close` - закрывает модальное окно.
-`isOpen` - возвращает true, если модальное окно открыто.
-`getCurrentContent` - возвращает текущий отображаемый элемент внутри контейнера.
-`render` - устанавливает переданный контент в модальное окно и обновляет DOM.
+`set content` - устанавливает содержимое модального окна.
 
 #### Класс OrderView
 Представляет собой форму ввода данных (способа оплаты и адреса доставки).
@@ -421,10 +436,8 @@ appApi.getProducts()
 `paymentCashButton` - кнопка выбора оплаты при получении.
 
 Методы класса:
-`get element` - возвращает корневой элемент формы (для передачи в модальное окно).
-`paymentCard` - активирует кнопку "Оплата картой" и деактивирует "Оплата при получении".
-`paymentCash` - активирует кнопку "Оплата при получении" и деактивирует "Оплата картой".
-`clear` - сбрасывает состояние формы.
+`set payment` - активирует кнопку в зависимости от выбранного способа оплаты.
+`address` - устанавливает значение поля адреса.
 
 #### Класс SuccessView
 Представляет собой модальное окно успешного оформления заказа.
@@ -434,14 +447,13 @@ appApi.getProducts()
 `events` - экземпляр IEvents для генерации события при закрытии.
 
 Поля класса:
-`total` - элемент, отображающий сумму заказа.
+`totalElement` - элемент, отображающий сумму заказа.
 `buttonSuccess` - кнопка закрытия окна успеха.
 
 Методы класса:
-`get element` - возвращает корневой элемент представления (для передачи в модальное окно).
-`setTotal` - устанавливает текст с итоговой суммой.
+`set total` - устанавливает текст с итоговой суммой.
 
-#### Класс View
+#### Класс CardView
 Абстрактный базовый класс для всех карточек товаров.
 
 Конструктор класса принимает:
@@ -454,4 +466,3 @@ appApi.getProducts()
 Методы класса:
 `set title` - устанавливает название товара.
 `set price` - устанавливает цену.
-`set id` - устанавливает id у корневого элемента.

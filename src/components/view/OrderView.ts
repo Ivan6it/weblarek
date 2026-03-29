@@ -1,9 +1,10 @@
 import { FormView } from './FormView';
 import { IEvents } from '../base/Events';
 import { ensureElement } from '../../utils/utils';
+import { TPayment } from '../../types';
 
 interface IOrderForm {
-    payment: string;
+    payment: TPayment;
     address: string;
 }
 
@@ -34,29 +35,18 @@ export class OrderView extends FormView<IOrderForm> {
             });
         });
 
-        this.submitButton.addEventListener('click', (event) => {
+        this.container.addEventListener('submit', (event) => {
             event.preventDefault();
             events.emit('contact:submit');
         });
     }
 
-    get element(): HTMLElement {
-        return this.container;
+    set payment(value: TPayment) {
+        this.paymentCashButton.classList.toggle('button_alt-active', value === "cash");
+        this.paymentCardButton.classList.toggle('button_alt-active', value === "card");
     }
 
-    paymentCard(): void {
-        this.paymentCashButton.classList.remove('button_alt-active');
-        this.paymentCardButton.classList.add('button_alt-active');
-    }
-
-    paymentCash(): void {
-        this.paymentCardButton.classList.remove('button_alt-active');
-        this.paymentCashButton.classList.add('button_alt-active');
-    }
-
-    clear(): void {
-        this.paymentCardButton.classList.remove('button_alt-active');
-        this.paymentCashButton.classList.remove('button_alt-active');
-        this.addressInput.value = '';
+    set address(value: string) {
+        this.addressInput.value = value;
     }
 }

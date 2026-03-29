@@ -2,7 +2,12 @@ import { Component } from "../base/Component";
 import { ensureElement } from "../../utils/utils";
 import { renderPrice } from "../../utils/upPrice";
 
-export abstract class View extends Component<unknown> {
+interface IView {
+    title: string;
+    price: number | null;
+}
+
+export abstract class cardView<T> extends Component<IView & T> {
     protected titleElement: HTMLElement;
     protected priceElement: HTMLElement;
 
@@ -19,9 +24,5 @@ export abstract class View extends Component<unknown> {
 
     set price(value: number | null) {
         this.priceElement.textContent = value ? `${renderPrice(value)} синапсов` : 'Бесценно';
-    }
-
-    set id(value: string) {
-        this.container.dataset.id = value;
     }
 }
